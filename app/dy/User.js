@@ -1,7 +1,7 @@
-let Common = require('app/dy/Common.js');
-let Video = require('app/dy/Video.js');
-let Comment = require('app/dy/Comment.js');
-let statistics = require('common/statistics.js');
+let Common = require('./Common.js');
+let Video = require('./Video.js');
+let Comment = require('./Comment.js');
+let statistics = require('../../common/statistics.js');
 
 const User = {
     /**
@@ -26,15 +26,24 @@ const User = {
     },
 
     /**
+     * 判断是否在用户主页
+     * @returns {boolean}
+     */
+    inUserHome() {
+        let settingTag = UiSelector().descContains('复制名字').clickable(true).findOne();
+        if (settingTag) {
+            Log.log('在用户主页');
+            return true;
+        }
+        Common.log('不在用户主页');
+        return false;
+    },
+
+    /**
      * 用户页面进入私信页面
      * @returns {boolean}
      */
     intoPrivatePage() {
-        //私密账号，目前可以私信（不确定是否可以禁用私信）
-        // if (UiSelector().text('私密账号').isVisibleToUser(true).findOnce()) {
-        //     Log.log('私密账号');
-        //     return false;
-        // }
         if (this.isBlackUser()) {
             return false;
         }
@@ -63,7 +72,7 @@ const User = {
      * 蓝V发送卡片
      * @returns {boolean}
      */
-    privateMsgCard(index) {
+    privateMsgCard(index = 1) {
         try {
             if (!this.intoPrivatePage()) {
                 return false;
@@ -85,33 +94,34 @@ const User = {
             toolTag.parent().click();
             Common.sleep(4000 + 2000 * Math.random());
 
-            let higherTag = UiSelector().desc('高级在线预约').isVisibleToUser(true).findOne();
-            if (!higherTag) {
+            let image = Images.capture();
+            let higherTag = Images.findTextPosition(image, '高级在线预约');
+            if (higherTag.length == 0) {
                 throw new Error('找不到发私信higherTag');
             }
 
-            Common.click(higherTag);
-            Common.sleep(2000 + 2000 * Math.random());
+            Gesture.click(higherTag[0].left + higherTag[0].width() * (0.2 + 0.6 * Math.random()), higherTag[0].top + higherTag[0].height() * (0.2 + 0.6 * Math.random()));
+            Common.sleep(3000 + 2000 * Math.random());
 
-            let previewTag = UiSelector().desc('预览').isVisibleToUser(true).find();
-            if (!previewTag) {
-                throw new Error('找不到发私信higherTag');
+            image = Images.capture();
+            let previewTag = Images.findTextPosition(image, '预览');
+            if (previewTag.length == 0) {
+                throw new Error('找不到发私信higherTag2');
             }
-            let count = Math.floor(Math.random() * previewTag.length);
-            if (index != undefined) {
-                count = index;
-            }
+
+            let count = index - 1;
             Log.log('点击第几个：', count, previewTag[count]);
-            Gesture.click(previewTag[count].bounds().left - 200 * Math.random(), previewTag[count].bounds().top + 50 * Math.random());
-            Common.sleep(2000 + 2000 * Math.random());
+            Gesture.click(previewTag[count].left - previewTag[count].width() * (1 + 2.5 * Math.random()), previewTag[count].top + previewTag[count].height() * (0.2 + 0.6 * Math.random()));
+            Common.sleep(3000 + 2000 * Math.random());
 
-            let sendsTag = UiSelector().desc('发送').clickable(true).isVisibleToUser(true).findOne()
-            if (!sendsTag) {
+            image = Images.capture();
+            let sendsTag = Images.findTextPosition(image, '发送');
+            if (sendsTag.length == 0) {
                 throw new Error("返回两次");
             }
 
             statistics.privateMsg();
-            Common.click(sendsTag);
+            Gesture.click(sendsTag[0].left + sendsTag[0].width() * (0.2 + 0.6 * Math.random()), sendsTag[0].top + sendsTag[0].height() * (0.2 + 0.6 * Math.random()));
             Common.sleep(1000 + Math.random() * 1000);
             this.backHome();
             return true;
@@ -130,7 +140,7 @@ const User = {
      * @param {boolean} noBackHome 不返回主界面
      * @returns {boolean}
      */
-    privateMsg(msg, inMsgPage, noBackHome) {
+    privateMsg(msg, inMsgPage = false, noBackHome = false) {
         try {
             if (!inMsgPage && !this.intoPrivatePage()) {
                 return false;
@@ -143,7 +153,7 @@ const User = {
                 throw new Error('找不到发私信输入框');//可能是企业号，输入框被隐藏了
             }
             textTag.setText(msg);
-            Common.sleep(100 + 100 * Math.random());
+            Common.sleep(500 + 500 * Math.random());
 
             let sendTextTag = UiSelector().desc('发送').isVisibleToUser(true).clickable(true).findOne();
             if (!sendTextTag || !sendTextTag.click()) {
@@ -171,7 +181,7 @@ const User = {
      * @returns {string}
      */
     getNickname() {
-        let nicknameTag = UiSelector().className('android.widget.TextView').isVisibleToUser(true).descContains('复制名字').findOne() || UiSelector().className('android.widget.TextView').isVisibleToUser(true).findOne();
+        let nicknameTag = UiSelector().className('android.widget.TextView').isVisibleToUser(true).descContains('复制名字').findOne() || UiSelector().className('android.widget.TextView').clickable(true).isVisibleToUser(true).findOne();
         if (nicknameTag) {
             return nicknameTag.text();
         }
@@ -189,7 +199,7 @@ const User = {
 
     /**
      * 获取抖音号
-     * @returns {string}
+     * @returns {string|null}
      */
     getDouyin() {
         let douyinTag = UiSelector().className('android.widget.TextView').isVisibleToUser(true).textContains('抖音号：').findOne();
@@ -200,7 +210,7 @@ const User = {
         let settingTag = UiSelector().desc('更多').clickable(true).isVisibleToUser(true).findOne() || UiSelector().text('更多').clickable(true).isVisibleToUser(true).findOne();
         if (!settingTag) {
             Log.log('找不到setting按钮');
-            return false;
+            return null;
         }
 
         settingTag.click();
@@ -227,7 +237,7 @@ const User = {
 
     /**
      * 返回关注控件
-     * @returns {object}
+     * @returns {UiObject}
      */
     getFocusTag() {
         let textTag = UiSelector().className('android.widget.TextView').text('关注').findOne();
@@ -261,8 +271,8 @@ const User = {
      */
     getIntroduce() {
         let introduceTag = UiSelector().className('android.widget.TextView').isVisibleToUser(true).filter(v => {
-            return v.bounds().top > textTag.bounds().bottom;
-        }).findOne()
+            return v.bounds().left < Device.width() / 4 && v.bounds().width() > Device.width() * 0.7;
+        }).findOne();
         return introduceTag.text();
     },
 
@@ -292,13 +302,14 @@ const User = {
 
     /**
      * 获取作品数控件
-     * @returns {object}
+     * @returns {UiObject}
      */
     getWorksTag() {
         let worksTag = UiSelector().className('android.widget.TextView').isVisibleToUser(true).descContains('作品').findOne();
         console.log("worksTag", worksTag);
         if (!worksTag) {
             return {
+                /** @ts-ignore */
                 text: function () {
                     return 0;
                 }
@@ -326,18 +337,18 @@ const User = {
 
     /**
      * 获取性别  0女，1男，2未知
-     * @returns {string}
+     * @returns {number}
      */
     getGender() {
         if (UiSelector().className('android.widget.TextView').isVisibleToUser(true).textContains('男').findOne()) {
-            return '1';
+            return 1;
         }
 
         if (UiSelector().className('android.widget.TextView').isVisibleToUser(true).textContains('女').findOne()) {
-            return '0';
+            return 0;
         }
 
-        return '2';
+        return 1;
     },
 
     /**
@@ -376,12 +387,14 @@ const User = {
 
     /**
      * 返回是否已关注控件
-     * @returns {object}
+     * @returns {UiObject}
      */
     isFocusTag() {
         return UiSelector().className('android.widget.TextView').isVisibleToUser(true).filter(v => {
+            /** @ts-ignore */
             return v.hintText == '按钮';
         }).textContains('已关注').findOne() || UiSelector().className('android.widget.TextView').isVisibleToUser(true).filter(v => {
+            /** @ts-ignore */
             return v.hintText == '按钮';
         }).textContains('互相关注').findOne();
     },
@@ -400,8 +413,10 @@ const User = {
      */
     focus() {
         let focusTag = UiSelector().className('android.widget.TextView').isVisibleToUser(true).filter(v => {
+            /** @ts-ignore */
             return v.hintText == '按钮';
         }).text('关注').findOne() || UiSelector().className('android.widget.TextView').isVisibleToUser(true).filter(v => {
+            /** @ts-ignore */
             return v.hintText == '按钮';
         }).text('回关').findOne();
 
@@ -412,6 +427,7 @@ const User = {
 
         if (focusTag) {
             let res = focusTag.click();
+            statistics.focus();
             Common.sleep(500 + 500 * Math.random());
             return res;
         }
@@ -454,8 +470,7 @@ const User = {
      * @returns {object}
      */
     getUserInfo() {
-        let res = {};
-        res = {
+        let res = {
             nickname: this.getNickname(),
             douyin: this.getDouyin(),
             age: this.getAge() || 0,
@@ -463,7 +478,7 @@ const User = {
             // zanCount: this.getZanCount(),
             // focusCount: this.getFocusCount(),
             // fansCount: this.getFansCount(),
-            worksCount: 0,
+            worksCount: this.getWorksCount(),
             // openWindow: 0,//开启橱窗
             ip: this.getIp(),
             // isCompany: this.isCompany(),//是否是机构 公司
@@ -471,21 +486,10 @@ const User = {
             isPrivate: this.isPrivate(),
         };
 
-        if (res.isPrivate) {
-            return res;
-        }
-
-        let newRes = {
-            worksCount: this.getWorksCount(),
-            // openWindow: this.openWindow(),
-        };
-
-        for (let i in newRes) {
-            res[i] = newRes[i];
-        }
         return res;
     },
 
+    /** @type {Array<string>} */
     contents: [],
     /**
      * 取消关注列表
@@ -499,7 +503,7 @@ const User = {
             throw new Error('找不到关注');
         }
 
-        Common.click(focus);
+        Common.click(focus, 0.2);
         Common.sleep(4000 + 1000 * Math.random());
         while (true) {
             let containers = Common.id('root_layout').isVisibleToUser(true).find();
@@ -547,10 +551,10 @@ const User = {
 
     /**
      * 设置用户昵称
-     * @param {array} contents 
+     * @param {Array<string>} contents 
      * @param {string} account 
      * @param {string} nickname 
-     * @param {object} machine 
+     * @param {any} machine 
      */
     fansIncListOp(contents, account, nickname, machine) {
         nickname = Encrypt.md5(nickname);
@@ -563,8 +567,8 @@ const User = {
      * 快速涨粉
      * @param {function} getMsg 
      * @param {object} machine 
-     * @param {object} settingData 
-     * @param {array} contents 
+     * @param {any} settingData 
+     * @param {Array<string>} contents 
      * @param {string} meNickname 
      * @returns {boolean}
      */
@@ -690,14 +694,14 @@ const User = {
      * type=0关注截流，type=1粉丝截流
      * @param {number} type 
      * @param {function} getMsg 
-     * @param {object} machine 
-     * @param {object} settingData 
-     * @param {array} contents 
-     * @param {string} meNickname 
+     * @param {any} machine 
+     * @param {any} settingData 
+     * @param {Array<string>} contents 
+     * @param {string} [meNickname]
      * @returns 
      */
     focusUserList(type, getMsg, machine, settingData, contents, meNickname) {
-        let account = settingData
+        let account = settingData.account;
         let tag = type == 0 ? this.getFocusTag() : this.getFansTag();
         Common.click(tag);
         Common.sleep(2000 + 1000 * Math.random());
@@ -841,7 +845,7 @@ const User = {
         Common.sleep(1000 + 1000 * Math.random());
 
         let nickTag = Common.id('root_layout').filter(v => {
-            return v.children().findOne(UiSelector().text('DeekeScript').isVisibleToUser(true));
+            return !!(v.children().findOne(UiSelector().text(keyword).isVisibleToUser(true)));
         }).isVisibleToUser(true).findOne();
 
         Log.log('nickTag', keyword, nickTag);
@@ -856,7 +860,7 @@ const User = {
 
     /**
      * 粉丝回访
-     * @param {array} nicknames 
+     * @param {Array<string>} nicknames 
      * @returns {boolean}
      */
     viewFansList(nicknames) {
@@ -869,9 +873,8 @@ const User = {
         Common.sleep(2000 + 1000 * Math.random());
         let contents = [];
         while (true) {
-            let containers = containers = Common.id('root_layout').isVisibleToUser(true).find();
+            let containers = Common.id('root_layout').isVisibleToUser(true).find();
             if (containers.length === 0) {
-                errorCount++;
                 Log.log('containers为0');
             }
 

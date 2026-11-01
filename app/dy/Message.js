@@ -1,9 +1,9 @@
-let Common = require('app/dy/Common.js');
-let Comment = require('app/dy/Comment.js');
-let User = require('app/dy/User.js');
-let Video = require('app/dy/Video.js');
-let statistics = require('common/statistics');
-let storage = require('common/storage.js');
+let Common = require('./Common.js');
+let Comment = require('./Comment.js');
+let User = require('./User.js');
+let Video = require('./Video.js');
+let statistics = require('../../common/statistics');
+let storage = require('../../common/storage.js');
 
 let Message = {
     /**
@@ -13,7 +13,7 @@ let Message = {
     search(account) {
         //首次打开抖音进入消息，拿不到desc信息，目前这样尝试
         let searchTag = UiSelector().className('android.widget.Button').desc('搜索').isVisibleToUser(true).findOnce() || UiSelector().className('android.widget.Button').clickable(true).isVisibleToUser(true).filter(v => {
-            return v.bounds().left > Device.width() / 2 && v.bounds().top < Device.height() / 5;
+            return v.bounds().left > Device.width() / 2 && v.bounds().top < Device.height() / 10;
         }).findOne();
         searchTag.click();
         Common.sleep(1500 + 500 * Math.random());
@@ -34,6 +34,7 @@ let Message = {
      */
     intoFansGroup(account, index) {
         this.search(account);
+        /** @type {string[]} */
         let contents = [];
 
         let rpCount = 0;
@@ -46,29 +47,37 @@ let Message = {
             }
 
             let contains = Common.id('content_container').descContains(account).isVisibleToUser(true).find();
+            if (contains.length == 0) {
+                contains = UiSelector().className('android.widget.TextView').textContains(account).filter(v => {
+                    return v.id() !== 'com.ss.android.ugc.aweme:id/keyword_tv';
+                }).isVisibleToUser(true).find();
+            }
+
             if (contains.length === 0) {
                 throw new Error('找不到群聊-2');
             }
 
             for (let i in contains) {
-                if (isNaN(i)) {
-                    continue;
-                }
-
                 if (contains[i].bounds().top < groupTag.bounds().top) {
                     Log.log('非群聊');
                     continue;
                 }
 
                 allRp++;
-                if (contents.includes(contains[i].desc())) {
+                if (contents.includes(contains[i].desc() || contains[i].text())) {
                     rp++;
                     continue;
                 }
 
-                contents.push(contains[i].desc());
+                contents.push(contains[i].desc() || contains[i].text());
                 if (contents.length === index) {
-                    contains[i].click();
+                    if (contains[i].isClickable()) {
+                        contains[i].click();
+                    } else {
+                        Common.click(contains[i], 0.25);
+                    }
+
+                    Common.log('点击的入口', contains[i]);
                     Common.sleep(3000 + 2000 * Math.random());
                     return true;
                 }
@@ -83,13 +92,13 @@ let Message = {
             if (rpCount >= 3) {
                 return false;
             }
-            Common.swipe(0, 0.5);
+            Common.swipe(0, 1, 3);
         }
     },
 
     /**
      * 进入粉丝群列表
-     * @param {array} contents 
+     * @param {Array<string>} contents 
      * @param {function} getMsg 
      * @param {function} machineInclude 
      * @param {function} machineSet 
@@ -120,29 +129,30 @@ let Message = {
         Log.log('config', config);
         //每进入这个界面，50%概率控件的“更多”没有出来，暂时这样补救
         let moreTag = UiSelector().className('android.widget.Button').desc('更多').clickable(true).isVisibleToUser(true).findOne() || UiSelector().className('android.widget.Button').clickable(true).filter(v => {
-            return v.bounds().top < Device.height() / 5 && v.bounds().left > Device.width() * 0.75 && v.children().findOne(UiSelector().className('android.widget.ImageView').isVisibleToUser(true));
+            return v.bounds().top < Device.height() / 10 && v.bounds().left > Device.width() * 0.75;
         }).isVisibleToUser(true).findOne();
 
-        moreTag.click();
-        Common.sleep(2000 + 1000 * Math.random());
+        Common.click(moreTag, 0.2);
+        Common.sleep(3000 + 1000 * Math.random());
 
         let intoGroupListTag = UiSelector().className('android.widget.TextView').text('群聊成员').isVisibleToUser(true).findOne();
-        Common.click(intoGroupListTag);
-        Common.sleep(2000 + 1000 * Math.random());
+        Common.click(intoGroupListTag, 0.2);
+        Common.sleep(5000 + 3000 * Math.random());
         Log.log(tag);
 
         let rpCount = 0;
         let rpContains = [];
         let runIndex = 0;
         while (true) {
-            let contains = UiSelector().id('com.ss.android.ugc.aweme:id/content').clickable(true).isVisibleToUser(true).find();
+            let parentTag = Common.id('recycler_view').isVisibleToUser(true).findOne();
+            let contains = parentTag.children().find(Common.id('title'));
             if (0 == contains.length) {
                 return true;
             }
 
             for (let i in contains) {
                 Log.log('第几个：' + i);
-                rpContains.push(contains[i].desc());
+                rpContains.push(contains[i].text());
                 if (rpContains[0] == rpContains[1]) {
                     rpCount++;
                 } else {
@@ -155,7 +165,7 @@ let Message = {
                 Log.log('rpContains', rpContains, rpCount);
 
                 runIndex++;
-                if (contents.includes(contains[i].desc()) || machineInclude(contains[i].desc())) {
+                if (contents.includes(contains[i].text()) || machineInclude(contains[i].text())) {
                     FloatDialogs.toast('昵称重复，不操作');
                     continue;
                 }
@@ -166,15 +176,14 @@ let Message = {
                 }
 
                 Log.log('点击元素，准备进入个人中心');
-                contains = UiSelector().id('com.ss.android.ugc.aweme:id/content').clickable(true).isVisibleToUser(true).find();
-                contains[i].click();
+                Common.click(contains[i]);
                 Common.sleep(3000 + 2000 * Math.random());
                 statistics.viewUser();
                 let isPrivateAccount = User.isPrivate();
                 if (isPrivateAccount) {
-                    Common.back();
-                    machineSet(contains[i].desc());
-                    contents.push(contains[i].desc());
+                    Common.back(1, 1000);
+                    machineSet(contains[i].text());
+                    contents.push(contains[i].text());
                     continue;
                 }
                 Log.log('是否是私密账号：' + isPrivateAccount);
@@ -222,7 +231,7 @@ let Message = {
                 }
 
                 Common.sleep(500);
-                Common.swipe(1, 1, 0.3);
+                Common.swipe(1, 1, 5);
                 Common.sleep(1000);
                 if (Math.random() * 100 <= config.focusRate) {
                     Common.sleep(base * config.focusWait);
@@ -234,19 +243,25 @@ let Message = {
                     Common.sleep(base * config.privateWait);
                     if (config.privateLanv) {
                         Log.log('私信卡片');
-                        User.privateMsgCard();
+                        User.privateMsgCard(1);
                         Common.sleep(500);
                     } else {
-                        User.privateMsg(getMsg(1, contains[i].desc()).msg);
+                        User.privateMsg(getMsg(1, contains[i].text()).msg);
                     }
                     Common.sleep(iBase * config.privateWait);
                 }
-                Log.log('设置已经操作的账号：' + contains[i].desc());
-                machineSet(contains[i].desc());
-                contents.push(contains[i].desc());
+                Log.log('设置已经操作的账号：' + contains[i].text());
+                machineSet(contains[i].text());
+                contents.push(contains[i].text());
                 Common.sleep(300);
-                Common.back();
+                if (User.inUserHome()) {
+                    Common.back(1, 2000);
+                }
                 Common.sleep(config.accountWait);
+            }
+
+            if (User.inUserHome()) {
+                Common.back(1, 2000);
             }
 
             if (rpCount >= 3) {

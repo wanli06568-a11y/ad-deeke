@@ -1,13 +1,13 @@
-let tCommon = require("app/dy/Common");
-let DyIndex = require('app/dy/Index.js');
-let DySearch = require('app/dy/Search.js');
-let DyVideo = require('app/dy/Video.js');
-let storage = require("common/storage");
-let machine = require("common/machine");
-let DyComment = require('app/dy/Comment.js');
-let baiduWenxin = require("service/baiduWenxin");
-let statistics = require("common/statistics");
-let DyUser = require('app/dy/User.js');
+let tCommon = require("../app/dy/Common");
+let DyIndex = require('../app/dy/Index.js');
+let DySearch = require('../app/dy/Search.js');
+let DyVideo = require('../app/dy/Video.js');
+let storage = require("../common/storage");
+let machine = require("../common/machine");
+let DyComment = require('../app/dy/Comment.js');
+let baiduWenxin = require("../service/baiduWenxin");
+let statistics = require("../common/statistics");
+let DyUser = require('../app/dy/User.js');
 
 let task = {
     contents: [],
@@ -15,6 +15,11 @@ let task = {
     zanRate: storage.get('task_dy_search_zan_rate', 'int'),
     commentRate: storage.get('task_dy_search_comment_rate', 'int'),
     focusRate: storage.get('task_dy_search_focus_rate', 'int'),
+    /**
+     * 
+     * @param {string} keyword 
+     * @returns 
+     */
     run(keyword) {
         return this.testTask(keyword);
     },
@@ -26,17 +31,29 @@ let task = {
         Log.setFile(allFile);
     },
 
+    
     //type 0 评论，1私信
-    getMsg(type, title, age, gender) {
-        gender = ['女', '男', '未知'][gender];
-        if (storage.getMachineType() === 1) {
-            if (storage.get('setting_baidu_wenxin_switch', 'bool')) {
-                return { msg: type === 1 ? baiduWenxin.getChat(title, age, gender) : baiduWenxin.getComment(title) };
-            }
-            return machine.getMsg(type) || false;//永远不会结束
+    /**
+     * 
+     * @param {number} type 
+     * @param {string} [title] 
+     * @param {number} [age] 
+     * @param {number} [gender] 
+     * @returns {any}
+     */
+    getMsg(type, title, age, gender = 2) {
+        let genderStr = ['女', '男', '未知'][gender];
+        if (storage.get('setting_baidu_wenxin_switch', 'bool')) {
+            return { msg: type === 1 ? baiduWenxin.getChat(title, age, genderStr) : baiduWenxin.getComment(title) };
         }
+        return machine.getMsg(type) || false;//永远不会结束
     },
 
+    /**
+     * 
+     * @param {string} keyword 
+     * @returns 
+     */
     testTask(keyword) {
         //首先进入点赞页面
         DyIndex.intoHome();
@@ -51,7 +68,7 @@ let task = {
                 if (DyVideo.isLiving()) {
                     Log.log('直播');
                     tCommon.sleep(2000 + Math.random() * 2000);
-                    DyVideo.next(true);
+                    DyVideo.next();
                     tCommon.sleep(2000);
                     continue;
                 }
@@ -62,7 +79,7 @@ let task = {
                 if (machine.get('task_dy_search_vertical_' + nickname + "_" + title, 'bool')) {
                     Log.log('重复视频');
                     tCommon.sleep(2000 + Math.random() * 2000);
-                    DyVideo.next(true);
+                    DyVideo.next();
                     tCommon.sleep(2000);
                     continue;
                 }
@@ -70,6 +87,7 @@ let task = {
                 statistics.viewVideo();
                 statistics.viewTargetVideo();
 
+                /** @ts-ignore */
                 if (this.contents.includes(nickname + '_' + title)) {
                     rpCount++;
                     if (rpCount > 3) {
@@ -90,7 +108,7 @@ let task = {
 
                 //看看是不是广告，是的话，不操作作者
                 if (DyVideo.viewDetail()) {
-                    DyVideo.next(true);
+                    DyVideo.next();
                 } else {
                     Log.log('不是广告，准备进入主页');
                 }
@@ -126,8 +144,9 @@ let task = {
                 }
 
                 machine.set('task_dy_search_vertical_' + nickname + "_" + title, true);
+                /** @ts-ignore */
                 this.contents.push(nickname + "_" + title);
-                DyVideo.next(true);
+                DyVideo.next();
                 tCommon.sleep(2000);
                 noNicknameCount = 0;
             } catch (e) {
@@ -137,9 +156,14 @@ let task = {
                         Log.log('多次退出未解决问题');
                         break;
                     }
-                    tCommon.back();
-                    tCommon.sleep(500);
-                    DyVideo.next(true);
+
+                    if (!UiSelector().className('android.widget.TextView').text('搜索').findOne()) {
+                        Log.log('评论窗口');//否则可能就是广告窗口，直接滑动来调整异常
+                        tCommon.back();
+                        tCommon.sleep(500);
+                    }
+
+                    DyVideo.next();
                     tCommon.sleep(2000);
                 }
                 continue;

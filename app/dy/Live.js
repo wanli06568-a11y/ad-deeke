@@ -1,5 +1,5 @@
-let Common = require('app/dy/Common.js');
-let statistics = require('common/statistics');
+let Common = require('./Common.js');
+let statistics = require('../../common/statistics');
 
 let Live = {
     /**
@@ -27,34 +27,38 @@ let Live = {
      * @returns {UiObject[]}
      */
     getUserTags() {
-        let parent = UiSelector().className('com.lynx.tasm.behavior.ui.swiper.ViewPager').isVisibleToUser(true).findOnce();
+        System.setAccessibilityMode('!fast');
+        let parent = UiSelector().className('android.widget.LinearLayout').isVisibleToUser(true).filter(v => {
+            if (!v.parent() || !v.parent().parent()) {
+                return false;
+            }
+            console.log(v.parent().className(), v.parent().parent().className());
+            return v.parent().className() == 'android.widget.FrameLayout' && v.parent().parent().className() == 'android.view.ViewGroup';
+        }).findOnce();
         if (!parent) {
             Log.log('找不到观众列表');
             FloatDialogs.toast('找不到观众列表');
+            System.setAccessibilityMode('fast');
             return [];
         }
 
-        let tags = parent.children().find(UiSelector().className('android.view.View').filter((v) => {
-            return v && v.bounds().left < 10 && v.bounds().width() >= Device.width() - 10 && v.getChildCount() == 0 && v.bounds().top < Device.height();
-        }));
+        let tags = parent.children().find(UiSelector().className('android.view.ViewGroup').isVisibleToUser(true));
+        System.setAccessibilityMode('fast');
         return tags;
     },
 
     /**
      * 获取用户列表控件
-     * @returns {UiObject[]}
+     * @returns {Object[]}
      */
     getUsers() {
         let tags = this.getUserTags();
-        let users = [];
-        for (let i in tags) {
-            users.push({
-                tag: tags[i],
-            });
-            Log.log(tags[i]);
+        if (tags.length === 0) {
+            System.sleep(2000);
+            tags = this.getUserTags();
         }
         Log.log("粉丝列表：" + tags.length);
-        return users;
+        return tags;
     },
 
     /**
@@ -65,8 +69,10 @@ let Live = {
     getNickname() {
         let userTag = UiSelector().className('android.widget.Button').isVisibleToUser(true).filter(v => {
             return v.desc() && v.bounds().height() < Device.height() / 10;
+        }).findOne() || UiSelector().className('android.widget.Button').isVisibleToUser(true).filter(v => {
+            return v.text() && v.bounds().height() < Device.height() / 10;
         }).findOne();
-        return userTag ? userTag.desc() : '';
+        return userTag ? (userTag.desc() || userTag.text() || '') : '';
     },
 
     /**
@@ -89,16 +95,12 @@ let Live = {
      * @returns {boolean}
      */
     swipeFansList() {
-        let tag = UiSelector().className('com.lynx.tasm.behavior.ui.swiper.ViewPager').isVisibleToUser(true).findOne();
-        if (!tag) {
-            return false;
-        }
-        let container = tag.children().findOne(UiSelector().className('android.widget.LinearLayout').filter(v => {
+        let container = UiSelector().className('androidx.recyclerview.widget.RecyclerView').filter(v => {
             return v.bounds().top > Device.height() / 3;
-        }));
+        }).scrollable(true).findOne();
 
         if (!container) {
-            return false;
+            return Common.swipe(0, 1, 5);
         }
 
         let left = container.bounds().left + container.bounds().width() * (0.2 + Math.random() * 0.6);
@@ -115,7 +117,7 @@ let Live = {
     loopClick(times) {
         try {
             let closeTag = UiSelector().desc('关闭').clickable(true).isVisibleToUser(true).filter((v) => {
-                return v && v.bounds() && v.bounds().top > Device.height() / 3 && v.bounds().width > 0 && v.bounds().left > 0;
+                return v && v.bounds() && v.bounds().top > Device.height() / 3 && v.bounds().width() > 0 && v.bounds().left > 0;
             }).findOnce();
             if (closeTag) {
                 closeTag.click();
@@ -165,7 +167,7 @@ let Live = {
                 Common.sleep(1000);
 
                 let emjs = UiSelector().className('android.widget.FrameLayout').isVisibleToUser(true).filter(v => {
-                    return v.desc() && v.desc().indexOf('[') == 0 && v.desc().indexOf(']') > 0;
+                    return !!(v.desc() && v.desc().indexOf('[') == 0 && v.desc().indexOf(']') > 0);
                 }).find();
 
                 let count = 1 + Math.floor(Math.random() * 3);

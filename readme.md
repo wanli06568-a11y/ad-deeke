@@ -1,8 +1,7 @@
-# 🚀 Deeke抖音黑科技 · 颠覆你的引流方式！
+# 🚀 Deeke抖音黑科技 · 颠覆你的引流获客方式！
 <img src='https://home.deeke.top/Index/githubStatistic?name=github-ad-deeke' width=0 height=0 />
-
 <span style="font-size:18px;">
-🎉 全国屈指可数的自研底层框架的黑科技软件研发公司！🎉
+🎉 全国屈指可数的自研底层框架的rpa软件研发公司！🎉
 </span>
 
 ### <a href="#bottom">👇 联系方式请见页面底部！ 👇</a>
@@ -13,11 +12,11 @@
 
 作为<a href="https://github.com/DeekeScript/ad-dke">“嘀客”</a>升级版，**Deeke黑科技**从性能到体验全面革新！  
 
-✅ 稳定性拉升（目前业顶级水平）
-✅ 功能更纯粹，操作更简单
-✅ 用户体验更顺滑（领先绝大多数市场软件）
-✅ 持续更新升级
-✅ 源码购买通道已开启（自研框架）
+✅ 稳定性拉升（目前业内顶级水平）<br/>
+✅ 功能更纯粹，操作更简单<br/>
+✅ 用户体验更顺滑（绝对领先）<br/>
+✅ 持续更新升级<br/>
+✅ 源码购买通道已开启（自研框架）<br/>
 
 🔥 核心变化亮点：
 
@@ -34,7 +33,10 @@
   购买、续费、支付一站式完成，安全快捷！
 
 - 🤖 **智能评论系统全新升级！**  
-  支持DeepSeek-V3大模型、角色评论（AI智能体Agent），人机难辨！
+  支持DeepSeek-V4、豆包等大模型、角色评论（AI智能体Agent），人机难辨！
+
+- 🔥 语音评论
+  支持抖音/小红书语音评论（多种AI语音可选），全面提升获客效果
 
 - 🛠️ **支持专属定制（群控/营销自动化/私域流量）**  
   满足不同场景的特殊需求，企业专属方案也OK！
@@ -57,24 +59,40 @@
 ## 📸 软件实景截图展示
 
 <div style="justify-content: space-between;flex-wrap:wrap;width:100%;">
-<img alt="Deeke主界面" src="photo/1.jpg" width="24%">
-<img alt="Deeke主界面" src="photo/2.jpg" width="24%">
-<img alt="Deeke主界面" src="photo/3.jpg" width="24%">
-<img alt="Deeke主界面" src="photo/4.jpg" width="24%">
+<img alt="Deeke主界面第一屏" src="photoNew/webp/home-1.webp" width="24%">
+<img alt="Deeke主界面第二屏" src="photoNew/webp/home2.webp" width="24%">
+<img alt="Deeke主界面第三屏" src="photoNew/webp/home3.webp" width="24%">
+<img alt="Deeke主界面第四屏" src="photoNew/webp/home4.webp" width="24%">
 
-<img alt="Deeke设置" src="photo/setting.jpg" width="24%">
-<img alt="Deeke智能评论" src="photo/speech.jpg" width="24%">
-<img alt="Deeke评论应用" src="photo/speech-app.jpg" width="24%">
-<img alt="Deeke设置页面" src="photo/1-setting.jpg" width="24%">
+<img alt="Deeke工具箱" src="photoNew/webp/home5.webp" width="24%">
+<img alt="Deeke推荐营销设置页" src="photoNew/webp/function.webp" width="24%">
+<img alt="Deeke推荐营销设置页" src="photoNew/webp/function2.webp" width="24%">
+<img alt="Deeke权限设置" src="photoNew/webp/home-setting.webp" width="24%">
 
-<img alt="Deeke功能文档说明" src="photo/document.jpg" width="24%">
-<img alt="Deeke支付界面" src="photo/pay.jpg" width="24%">
-<img alt="Deeke扫码设置" src="photo/scan.jpg" width="24%">
-<img alt="Deeke推荐营销设置页" src="photo/function.jpg" width="24%">
+<img alt="Deeke工商企业查询" src="photoNew/webp/company.webp" width="24%">
+<img alt="Deeke工商企业手机号" src="photoNew/webp/company-2.webp" width="24%">
+<img alt="Deeke工商企业" src="photoNew/webp/company-detail.webp" width="24%">
+<img alt="Deeke账户" src="photoNew/webp/account.webp" width="24%">
 
-<img alt="Deeke推荐营销设置页" src="photo/function2.jpg" width="24%">
-<img alt="Deeke图标" src="photo/icon.jpg" width="24%">
-<img alt="Deeke演示" src="photo/demo.gif" width="24%"/>
+<img alt="Deeke账户充值" src="photoNew/webp/company-pay.webp" width="24%">
+<img alt="Deeke智能体" src="photoNew/webp/agent.webp" width="24%">
+<img alt="Deeke设置页面" src="photoNew/webp/setting.webp" width="24%">
+<img alt="Deeke话术库" src="photoNew/webp/speech.webp" width="24%">
+
+<img alt="Deeke智能话术" src="photoNew/webp/speech-ai.webp" width="24%">
+<img alt="Deeke采集" src="photoNew/webp/grab.webp" width="24%">
+<img alt="Deeke采集列表" src="photoNew/webp/grab2.webp" width="24%">
+<img alt="Deeke采集详情" src="photoNew/webp/grab3.webp" width="24%">
+
+<img alt="Deeke设置页面提示" src="photoNew/webp/setting2.webp" width="24%">
+<img alt="Deeke功能说明" src="photoNew/webp/func.webp" width="24%">
+<img alt="Deeke支付页面" src="photoNew/webp/pay.webp" width="24%">
+<img alt="Deeke语音评论" src="photoNew/webp/comment-voice.webp" width="24%">
+
+<img alt="Deeke数据统计" src="photoNew/webp/statistics.webp" width="24%">
+<img alt="Deeke扫码设置" src="photoNew/webp/scan.webp" width="24%">
+<img alt="Deeke图标" src="photoNew/webp/icon.webp" width="24%">
+<img alt="Deeke演示" src="photoNew/webp/demo.webp" width="24%"/>
 </div>
 
 ---
@@ -82,10 +100,10 @@
 ## 💻 后台系统展示（功能强大，一应俱全）
 
 <div style="justify-content: space-between;flex-wrap:wrap;width:100%;">
-<img alt="Deeke后台" src="photo/backend-main.png" width="100%">
-<img alt="Deeke代理后台" src="photo/backend-agent.png" width="100%">
-<img alt="Deeke后台登录界面" src="photo/backend-login.png" width="100%">
-<img alt="Deeke后台数据" src="photo/backend-data.png" width="100%">
+<img alt="Deeke后台" src="photo/webp/backend-main.webp" width="100%">
+<img alt="Deeke代理后台" src="photo/webp/backend-agent.webp" width="100%">
+<img alt="Deeke后台登录界面" src="photo/webp/backend-login.webp" width="100%">
+<img alt="Deeke后台数据" src="photo/webp/backend-data.webp" width="100%">
 </div>
 
 ---
@@ -102,7 +120,7 @@
 立即联系我们！
 <a id="bottom"></a>
 <div style="justify-content: space-between;flex-wrap:wrap;width:100%;">
-<img alt="Deeke技术支持" src="photo/weixin.jpg" width="30%">
+<img alt="Deeke技术支持" src="photo/webp/weixin.webp" width="30%">
 </div>
 
 ---

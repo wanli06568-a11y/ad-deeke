@@ -1,18 +1,27 @@
-let tCommon = require("app/xhs/Common");
-let XhsIndex = require("app/xhs/Index");
-let XhsSearch = require("app/xhs/Search");
-let XhsUser = require("app/xhs/User");
-let XhsWork = require("app/xhs/Work");
-let XhsComment = require("app/xhs/Comment");
-let storage = require("common/storage");
-let machine = require("common/machine");
-let baiduWenxin = require("service/baiduWenxin");
-let statistics = require("common/statistics");
+let tCommon = require("../app/xhs/Common");
+let XhsIndex = require("../app/xhs/Index");
+let XhsSearch = require("../app/xhs/Search");
+let XhsUser = require("../app/xhs/User");
+let XhsWork = require("../app/xhs/Work");
+let XhsComment = require("../app/xhs/Comment");
+let storage = require("../common/storage");
+let machine = require("../common/machine");
+let baiduWenxin = require("../service/baiduWenxin");
+let statistics = require("../common/statistics");
 
 let task = {
     index: -1,
+    /** @type {string[]} */
     nicknames: [],
+    /** @type {string[]} */
     ignoreTitles: [],
+    /**
+     * 
+     * @param {string} input 
+     * @param {string} kw 
+     * @param {number} sleepSecond 
+     * @returns 
+     */
     run(input, kw, sleepSecond) {
         return this.testTask(input, kw, sleepSecond);
     },
@@ -22,10 +31,19 @@ let task = {
         this.ips = machine.get('task_xhs_toker_comment_ip', 'string');
     },
 
-    getMsg(type, title, age, gender) {
-        gender = ['女', '男', '未知'][gender];
+    //type 0 评论，1私信
+    /**
+     * 
+     * @param {number} type 
+     * @param {string} [title] 
+     * @param {number} [age] 
+     * @param {number} [gender] 
+     * @returns {any}
+     */
+    getMsg(type, title, age, gender = 2) {
+        let genderStr = ['女', '男', '未知'][gender];
         if (storage.get('setting_baidu_wenxin_switch', 'bool')) {
-            return { msg: type === 1 ? baiduWenxin.getChat(title, age, gender) : baiduWenxin.getComment(title) };
+            return { msg: type === 1 ? baiduWenxin.getChat(title, age, genderStr) : baiduWenxin.getComment(title) };
         }
         return machine.getMsg(type) || false;//永远不会结束
     },
@@ -37,6 +55,12 @@ let task = {
         Log.setFile(allFile);
     },
 
+    /**
+     * 
+     * @param {string} str 
+     * @param {string[]} kw 
+     * @returns 
+     */
     includesKw(str, kw) {
         for (let i in kw) {
             if (str.includes(kw[i])) {
@@ -46,6 +70,13 @@ let task = {
         return false;
     },
 
+    /**
+     * 
+     * @param {any} input 
+     * @param {any} kw 
+     * @param {number} sleepSecond 
+     * @returns 
+     */
     testTask(input, kw, sleepSecond) {
         //首先进入页面
         this.index++;
@@ -71,7 +102,7 @@ let task = {
         }
 
         //获取最新的前三视频
-        let i = 3;
+        let i = 10;
         while (i-- > 0) {
             Log.log('进入一个视频', 3 - i);
             let r = XhsUser.intoVideoX(this.ignoreTitles, 3);
@@ -93,7 +124,7 @@ let task = {
             XhsWork.openComment();
             Log.log('打开或者滑动到评论区域');
 
-            tCommon.sleep(2000 + 1000 * Math.random());
+            tCommon.sleep(3000 + 1000 * Math.random());
             let maxSwipe = commentCount;//最多滑动次数
             while (maxSwipe-- > 0) {
                 let comments = XhsWork.getCommenList();//nicknameTag列表
@@ -165,7 +196,12 @@ let task = {
                 }
 
                 Log.log('下一页评论');
-                XhsWork.commentListSwipe();
+                if (!XhsWork.commentListSwipe()) {
+                    tCommon.sleep(1000);
+                    Log.log('评论扫描完了，已到底-');
+                    break;
+                }
+
                 tCommon.sleep(1500 + 500 * Math.random());
             }
 
@@ -211,6 +247,11 @@ let sleepSecond = machine.get('task_xhs_toker_comment_sleep_second', "int");
 
 if (sleepSecond <= 0) {
     System.toast('休眠时间不能为空');
+    System.exit();
+}
+
+if (!Access.isMediaProjectionEnable()) {
+    FloatDialogs.show('温馨提示', '请打开主界面侧边栏，开启“图色查找”权限');
     System.exit();
 }
 

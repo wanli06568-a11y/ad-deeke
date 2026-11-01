@@ -1,7 +1,7 @@
-let tCommon = require("app/ks/Common");
-let ks = require('app/iKs');
-let machine = require("common/machine");
-// let baiduWenxin = require("service/baiduWenxin");
+let tCommon = require("../app/ks/Common");
+let ks = require('../app/iKs');
+let machine = require("../common/machine");
+// let baiduWenxin = require("../service/baiduWenxin");
 
 let task = {
     me: {},//我的抖音号和昵称
@@ -45,8 +45,6 @@ while (true) {
                     break;
                 }
             }
-            Log.log("内存清理");
-            System.cleanUp();
             throw new Error('重新进入');
         }
         tCommon.sleep(3000);
@@ -56,7 +54,6 @@ while (true) {
         if (tag) {
             tCommon.click(tag);
         }
-        System.cleanUp();
         tCommon.closeAlert(1);
         tCommon.backHome();
     }

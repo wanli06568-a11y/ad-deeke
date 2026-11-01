@@ -64,7 +64,7 @@ let Comment = {
     /**
      * 是否是作者
      * @param tag
-     * @returns {UiObject}
+     * @returns {boolean}
      */
     isAuthor() {
         return this.tag.children().findOne(UiSelector().text('作者')) ? true : false;
@@ -100,7 +100,7 @@ let Comment = {
     /**
      * 获取点赞数
      * @param tag
-     * @returns {string}
+     * @returns {number}
      */
     getZanCount() {
         return Common.numDeal(this.getZanTag().text());
@@ -121,8 +121,7 @@ let Comment = {
     //data 是getList返回的参数
     clickZan(data) {
         let zanTag = this.getZanTag(data.tag);
-        zanTag && zanTag.click();
-        statistics.zanComment();
+        zanTag && Common.click(zanTag, 0.2) && statistics.zanComment();
         return true;
     },
 
@@ -131,7 +130,7 @@ let Comment = {
      * @returns {string}
      */
     getTime() {
-        let timestamp = Math.ceil(Date.parse(new Date()) / 1000);
+        let timestamp = Math.ceil(Date.now() / 1000);
         let incSecond = 0;
 
         let time = this.getTimeTag();
@@ -315,6 +314,10 @@ let Comment = {
      * @returns {boolean}
      */
     commentImage() {
+        let intoTag = Common.id('emotion_button_layout').isVisibleToUser(true).findOne();
+        Common.click(intoTag, 0.2);
+        Common.log('点击表情按钮');
+        Common.sleep(1000 + 1000 * Math.random());
         let imgTagParent = Common.id('emotion_bottom_tab').isVisibleToUser(true).findOne();
         let imgTag = imgTagParent.children().getChildren(1);
         Log.log(imgTag);
@@ -325,7 +328,7 @@ let Comment = {
         }
 
         Log.log("表情呢", imgTag);
-        imgTag.click();
+        Common.click(imgTag, 0.2);
         Common.sleep(2000 + 500 * Math.random());
 
         console.log("开始找表情");

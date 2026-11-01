@@ -1,8 +1,8 @@
-let storage = require("common/storage.js");
-let Common = require("app/xhs/Common.js");
-let User = require("app/xhs/User.js");
+let storage = require("../common/storage.js");
+let Common = require("../app/xhs/Common.js");
+let User = require("../app/xhs/User.js");
 
-let Work = require("app/xhs/Work.js");
+let Work = require("../app/xhs/Work.js");
 
 let task = {
     log() {
@@ -10,17 +10,6 @@ let task = {
         let file = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
         let allFile = "log/log-xhs-zan-back-" + file + ".txt";
         Log.setFile(allFile);
-    },
-
-    //type 0 评论，1私信
-    getMsg(type, title, age, gender) {
-        gender = ['女', '男', '未知'][gender];
-        if (storage.get('setting_baidu_wenxin_switch', 'bool')) {
-            return { msg: type === 1 ? baiduWenxin.getChat(title, age, gender) : baiduWenxin.getComment(title) };
-        }
-
-        //return { msg: ['厉害', '六六六', '666', '拍得很好', '不错哦', '关注你很久了', '学习了', '景色不错', '真的很不错', '太厉害了', '深表认同', '来过了', '茫茫人海遇见你', '太不容易了', '很好', '懂了', '我看到了', '可以的', '一起加油', '真好', '我的个乖乖'][Math.round(Math.random() * 20)] };
-        return machine.getMsg(type) || false;//永远不会结束
     },
 
     run() {
@@ -34,6 +23,11 @@ let task = {
         return this.zanBack(config);
     },
 
+    /**
+     * 
+     * @param {any} config 
+     * @returns 
+     */
     zanBack(config) {
         Log.log('开始');
         UiSelector().className('android.view.ViewGroup').descContains('已选定赞和收藏').isVisibleToUser(true).waitFindOne();
@@ -48,15 +42,16 @@ let task = {
             try {
                 let containers = UiSelector().className('android.view.ViewGroup').isVisibleToUser(true).filter(v => {
                     let childs = v.children();
-                    if (!childs.findOne(Common.id('avatarLayout'))) {
-                        return false;
-                    }
-
                     if (!childs.findOne(Common.id('nickNameTV'))) {
                         return false;
                     }
 
                     if (!childs.findOne(Common.id('followTV'))) {
+                        return false;
+                    }
+
+                    //赞了你的笔记，收藏了你的笔记  如果不可见，很可能昵称点击也有问题
+                    if (childs.findOne(UiSelector().textContains('你的笔记').isVisibleToUser(false))) {
                         return false;
                     }
                     return true;
@@ -98,7 +93,7 @@ let task = {
                         arr.shift();
                     }
 
-                    Common.click(nicknameTag);
+                    Common.click(nicknameTag, 0.2);
                     Common.sleep(2000 + 2000 * Math.random());
 
                     Log.log('即将进入视频');
@@ -153,6 +148,11 @@ let task = {
     }
 }
 
+
+if (!Access.isMediaProjectionEnable()) {
+    FloatDialogs.show('温馨提示', '请打开主界面侧边栏，开启“图色查找”权限');
+    System.exit();
+}
 if (task.run()) {
     FloatDialogs.show('提示', '已完成');
 }

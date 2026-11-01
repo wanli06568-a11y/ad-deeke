@@ -264,6 +264,10 @@ const Common = {
                     a = UiSelector().text("拒绝").clickable(true).isVisibleToUser(true).findOne() || UiSelector().text("拒绝").desc('拒绝').clickable(true).filter(f).isVisibleToUser(true).findOne();
                 }
 
+                if (!a) {
+                    a = UiSelector().text("立即领取").filter(f).isVisibleToUser(true).findOne();
+                }
+
                 let ff = function (v) {
                     return v && v.bounds() && v.bounds().top > Device.height() / 5 && v.bounds().top + v.bounds().height() < Device.height() * 0.8 && v.bounds().left > Device.width() / 2 && v.bounds().left + v.bounds().width() < Device.width() * 0.9;//只有在中间的位置才是弹窗
                 }
@@ -278,15 +282,16 @@ const Common = {
                     a = UiSelector().text('暂不公开').clickable(true).filter(f).isVisibleToUser(true).findOnce() || UiSelector().text('忽略本次').clickable(true).filter(f).isVisibleToUser(true).findOnce() || UiSelector().descContains('不再提醒').clickable(true).filter(f).isVisibleToUser(true).findOne();
                 }
 
-                if (a) {
+                if (a && a.isClickable()) {
                     a.click();
-                    Log.log(a);
-                    Log.log("可能的弹窗点击了");
+                    console.log(a);
+                    console.log("可能的弹窗点击了");
+                } else if (a) {
+                    this.click(a, 0.2);
                 }
 
                 if (k % 50 == 0) {
                     Log.log("对象清理");
-                    System.cleanUp();//清理线程垃圾
                 }
             } catch (e) {
                 this.log("close dialog 异常了");
@@ -330,6 +335,10 @@ const Common = {
         keyword = keyword.split(',');
         let ks = [];
         for (let i in keyword) {
+            if (keyword[i] == '') {
+                continue;
+            }
+
             let tmp = keyword[i];
             if (keyword[i].indexOf('&') !== -1) {
                 tmp = keyword[i].split('&');
@@ -391,7 +400,18 @@ const Common = {
 
     getRemark(remark) {
         return remark.indexOf('#') == 0 || remark.indexOf('＃') == 0;
-    }
+    },
+
+    userHomeBack() {
+        let k = 2;
+        do {
+            this.back();
+            this.log('返回中...');
+            if (k-- <= 0) {
+                break;
+            }
+        } while (this.id('user_name_tv').isVisibleToUser(true).findOne());//昵称ID
+    },
 }
 
 module.exports = Common;

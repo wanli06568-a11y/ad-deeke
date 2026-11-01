@@ -1,17 +1,24 @@
-let tCommon = require('app/dy/Common.js');
-let DyIndex = require('app/dy/Index.js');
-let DySearch = require('app/dy/Search.js');
-let DyUser = require('app/dy/User.js');
-let DyVideo = require('app/dy/Video.js');
-let storage = require('common/storage.js');
-let machine = require('common/machine.js');
-let DyComment = require('app/dy/Comment.js');
-let baiduWenxin = require('service/baiduWenxin.js');
+let tCommon = require('../app/dy/Common.js');
+let DyIndex = require('../app/dy/Index.js');
+let DySearch = require('../app/dy/Search.js');
+let DyUser = require('../app/dy/User.js');
+let DyVideo = require('../app/dy/Video.js');
+let storage = require('../common/storage.js');
+let machine = require('../common/machine.js');
+let DyComment = require('../app/dy/Comment.js');
+let baiduWenxin = require('../service/baiduWenxin.js');
 
 let task = {
     contents: [],
+    /** @type {Array<string>} */
     kws: [],
     count: 10,
+    /**
+     * 
+     * @param {string} keyword 
+     * @param {string} kws 
+     * @returns 
+     */
     run(keyword, kws) {
         this.kws = tCommon.splitKeyword(kws);
         Log.log('keyword', keyword, this.count, this.kws);
@@ -25,15 +32,22 @@ let task = {
         Log.setFile(allFile);
     },
 
+    
     //type 0 评论，1私信
-    getMsg(type, title, age, gender) {
-        gender = ['女', '男', '未知'][gender];
-        if (storage.getMachineType() === 1) {
-            if (storage.get('setting_baidu_wenxin_switch', 'bool')) {
-                return { msg: type === 1 ? baiduWenxin.getChat(title, age, gender) : baiduWenxin.getComment(title) };
-            }
-            return machine.getMsg(type) || false;//永远不会结束
+    /**
+     * 
+     * @param {number} type 
+     * @param {string} [title] 
+     * @param {number} [age] 
+     * @param {number} [gender] 
+     * @returns {any}
+     */
+    getMsg(type, title, age, gender = 2) {
+        let genderStr = ['女', '男', '未知'][gender];
+        if (storage.get('setting_baidu_wenxin_switch', 'bool')) {
+            return { msg: type === 1 ? baiduWenxin.getChat(title, age, genderStr) : baiduWenxin.getComment(title) };
         }
+        return machine.getMsg(type) || false;//永远不会结束
     },
 
     contains(content) {
@@ -45,6 +59,11 @@ let task = {
         return false;
     },
 
+    /**
+     * 
+     * @param {string} keyword 
+     * @returns 
+     */
     testTask(keyword) {
         //首先进入点赞页面
         DyIndex.intoHome();
@@ -56,7 +75,7 @@ let task = {
             if (DyVideo.isLiving()) {
                 Log.log('直播');
                 tCommon.sleep(1000 + Math.random() * 1000);
-                DyVideo.next(true);
+                DyVideo.next();
                 continue;
             }
 
@@ -75,7 +94,7 @@ let task = {
             let md5 = Encrypt.md5(nickname + "_" + title);
             if (machine.get('task_dy_search_inquiry_' + md5, 'bool') || commentCount <= 0) {
                 Log.log('重复视频');
-                DyVideo.next(true);
+                DyVideo.next();
                 continue;
             }
 
@@ -96,7 +115,8 @@ let task = {
 
             Log.log('看看是不是广告');
             if (DyVideo.viewDetail()) {
-                DyVideo.next(true);
+                DyVideo.next();
+                Log.log('是广告');
                 continue;
             } else {
                 Log.log('不是广告，准备进入主页');
@@ -140,6 +160,8 @@ let task = {
 
                     try {
                         DyComment.clickZan(comments[i]);
+                        Log.log('点击了赞');
+                        tCommon.sleep(1000 + 1000 * Math.random());
                     } catch (e) {
                         Log.log(e, '赞找不到了');
                     }
@@ -234,9 +256,9 @@ Log.log("count: " + task.count);
 tCommon.openApp();
 //开启线程  自动关闭弹窗
 Engines.executeScript("unit/dialogClose.js");
-System.setAccessibilityMode('!fast');//快速模式
 
 while (true) {
+    System.setAccessibilityMode('!fast');//快速模式
     task.log();
     try {
         let res = task.run(keyword, kws);

@@ -1,33 +1,28 @@
-let Common = require('app/dy/Common.js');
-let statistics = require('common/statistics.js');
+let Common = require('./Common.js');
+let statistics = require('../../common/statistics.js');
 
 const Video = {
     /**
      * 滑动视频  （非fast模式下运行，否则视频划不动）
      * @returns {boolean}
      */
-    next(fast) {
+    next() {
         //推荐页面滑动视频
-        if (fast) {
-            System.setAccessibilityMode('!fast');
-        }
-        let tag = UiSelector().id('com.ss.android.ugc.aweme:id/viewpager').desc('视频').scrollable(true).isVisibleToUser(true).findOne();
-        if (!tag) {
-            tag = UiSelector().id('com.ss.android.ugc.aweme:id/viewpager').filter(v => {
-                //注意，这里的过滤，防止左滑进入用户页面
-                return v.bounds().height() < Device.height();
-            }).scrollable(true).className('androidx.viewpager.widget.ViewPager').isVisibleToUser(true).findOne();
-        }
-        let res = tag.scrollForward();
-        if (fast) {
-            System.setAccessibilityMode('fast');
-        }
-        return res;
+        let w = Device.width();
+        let h = Device.height();
+
+        let x = w * (0.45 + Math.random() * 0.1);
+        let startY = h * (0.80 + Math.random() * 0.05);
+        let endY = h * (0.20 + Math.random() * 0.05);
+
+        let duration = 250 + Math.random() * 150;
+
+        return Gesture.swipe(x, startY, x, endY, duration);
     },
 
     /**
      * 获取点赞标签
-     * @returns {object}
+     * @returns {UiObject}
      */
     getZanTag() {
         let tag = UiSelector().className('android.widget.LinearLayout').descContains('点赞').clickable(true).isVisibleToUser(true).findOne();
@@ -76,7 +71,7 @@ const Video = {
 
     /**
      * 获取评论标签
-     * @returns {object}
+     * @returns {UiObject}
      */
     getCommentTag() {
         let tag = UiSelector().className('android.widget.LinearLayout').descContains('评论').clickable(true).isVisibleToUser(true).findOne();
@@ -97,9 +92,9 @@ const Video = {
         return Common.numDeal(comment.desc());
     },
 
-    /*
+    /**
      * 打开评论
-     * @param {number} type
+     * @param {boolean} [type]
      * @returns {boolean}
      */
     openComment(type) {
@@ -177,9 +172,9 @@ const Video = {
         return Common.numDeal(share.desc());
     },
 
-    /*
+    /**
      * 获取视频内容控件
-     * @returns {object}
+     * @returns {UiObject|false}
      */
     getContentTag() {
         let tag = Common.id('desc').isVisibleToUser(true).findOne();
@@ -193,7 +188,7 @@ const Video = {
 
     /**
      * 获取视频内容
-     * @returns {object}
+     * @returns {string}
      */
     getContent() {
         let tag = this.getContentTag();
@@ -202,7 +197,7 @@ const Video = {
 
     /**
      * 获取标题上方的昵称控件
-     * @returns {object}
+     * @returns {UiObject}
      */
     getTitleTag() {
         let tag = Common.id('title').isVisibleToUser(true).findOnce();
@@ -214,16 +209,21 @@ const Video = {
 
     /**
      * 获取标题上的昵称
-     * @returns {string}
+     * @returns {string|null}
     */
     getAtNickname() {
         let tag = this.getTitleTag();
         if (!tag) {
-            return false;
+            return null;
         }
+
         return this.getTitleTag().text().replace('@', '');
     },
 
+    /**
+     * 
+     * @returns UiObject
+     */
     getAvatarTag() {
         let tag = Common.id('user_avatar').isVisibleToUser(true).findOnce();
         if (tag) {
@@ -234,7 +234,7 @@ const Video = {
 
     /**
      * 获取用户的视频的发布时间
-     * @returns {object}
+     * @returns {UiObject}
      */
     getTimeTag() {
         let tag = UiSelector().descContains('发布时间').isVisibleToUser(true).findOne();
@@ -256,7 +256,7 @@ const Video = {
 
     /**
      * 是否直播中
-     * @returns {string}
+     * @returns {boolean}
      */
     isLiving() {
         //两种方式，一种是屏幕上展示，一种是头像
@@ -278,7 +278,8 @@ const Video = {
      * @returns {boolean}
      */
     viewDetail() {
-        let tags = UiSelector().descMatches('(查看|了解详情)').isVisibleToUser(true).findOne() || UiSelector().textMatches('(查看|了解详情)').isVisibleToUser(true).findOne();
+        let tags = UiSelector().descMatches(/(查看|了解详情)/).isVisibleToUser(true).findOne() || UiSelector().textMatches(/(查看|了解详情)/).isVisibleToUser(true).findOne();
+        Log.log('广告', tags);
         if (tags) {
             return true;
         }
@@ -304,38 +305,46 @@ const Video = {
      * @returns {boolean}
      */
     intoLocalUserPage() {
-        let nicknameTag = this.getAvatarTag();
+        let nicknameTag = this.getTitleTag();
         Log.log(nicknameTag);
         let res = nicknameTag.click();
         Common.sleep(3000 + Math.random() * 1000);
+        let closeTag = UiSelector().className('android.widget.Button').desc('关闭').isVisibleToUser(true).findOne();
+        if (closeTag) {
+            Common.log('关闭对话弹窗');
+            closeTag.click();
+            Common.sleep(1000 + Math.random() * 1000);
+        }
+
         statistics.viewUser();//目标视频数量加1
         return res;
     },
 
     /**
      * 获取用户昵称  不再通过头像获取，因为经常出问题
-     * @returns {string}
+     * @returns {string|null}
      */
     getNickname() {
         return this.getAtNickname();
     },
 
-    /*
+    /**
     * 获取距离
-    * @param {boolean} loop
-    * @returns {string}
+    * @returns {UiObject}
     */
     getDistanceTag() {
-        let tag = UiSelector().descMatches('[m|公里]').filter(v => {
-            return !isNaN(v.desc().substring(0, 1));
-        }).isVisibleToUser(true).findOne();
-
-        console.log("同城--", tag ? '1' : '0', typeof (tag));
+        let tag = UiSelector().textMatches(/(\d+(?:\.\d+)?)(km|m|千米|米)/).isVisibleToUser(true).findOne() || UiSelector().descMatches(/(\d+(?:\.\d+)?)(km|m|千米|米)/).isVisibleToUser(true).findOne();
+        Common.log("同城--", tag);
         if (tag) {
-            console.log("同城--", tag);
-            return tag;
+            /** @ts-ignore */
+            return {
+                desc: () => {
+                    return tag.desc() ||tag.text() || '100';
+                }
+            };
         }
 
+        /** @ts-ignore */
         return {
             desc: () => {
                 return '100';//如果找不到，则设置为1000km，直接过滤掉
@@ -349,7 +358,7 @@ const Video = {
      */
     getDistance() {
         let tag = this.getDistanceTag();
-        let f = parseFloat(tag.desc());
+        let f = parseFloat(tag.desc() || tag.text());
         if (tag.desc().indexOf('公里') !== -1 || tag.desc().indexOf('km') !== -1) {
             //公里，什么都不做
         } else if (tag.desc().indexOf('米') !== -1 || tag.desc().indexOf('m') !== -1) {
@@ -364,7 +373,7 @@ const Video = {
 
     /**
      * 获取视频发布时间
-     * @return {object}
+     * @return {UiObject}
      */
     getInTimeTag() {
         let tag = UiSelector().descContains('发布时间：').isVisibleToUser(true).findOne();
@@ -372,6 +381,7 @@ const Video = {
             return tag;
         }
 
+        /** @ts-ignore */
         return {
             text() {
                 return '0分钟前';
@@ -388,34 +398,34 @@ const Video = {
         let time = inTimeTag.desc().replace('发布时间：', '');
         let incSecond = 0;
         if (time.indexOf('分钟前') !== -1) {
-            incSecond = time.replace('分钟前', '') * 60;
+            incSecond = parseInt(time.replace('分钟前', '')) * 60;
         } else if (time.indexOf('小时前') !== -1) {
-            incSecond = time.replace('小时前', '') * 3600;
+            incSecond = parseInt(time.replace('小时前', '')) * 3600;
         } else if (time.indexOf('刚刚') !== -1) {
             incSecond = 0;
         } else if (time.indexOf('天前') !== -1) {
-            incSecond = time.replace('天前', '') * 86400;
+            incSecond = parseInt(time.replace('天前', '')) * 86400;
         } else if (time.indexOf('周前') !== -1) {
-            incSecond = time.replace('周前', '') * 86400 * 7;
+            incSecond = parseInt(time.replace('周前', '')) * 86400 * 7;
         } else if (time.indexOf('昨天') !== -1) {
-            time = time.replace('昨天', '').split(':');
-            incSecond = 86400 - time[0] * 3600 - time[1] * 60 + (new Date()).getHours() * 3600 + (new Date()).getMinutes() * 60;
+            let iTime = time.replace('昨天', '').split(':');
+            incSecond = 86400 - parseInt(iTime[0]) * 3600 - parseInt(iTime[1]) * 60 + (new Date()).getHours() * 3600 + (new Date()).getMinutes() * 60;
         } else if (/[\d]{2}\-[\d]{2}/.test(time) || /[\d]{2}\月[\d]{2}日/.test(time)) {
             time = time.replace('日', '').replace('月', '-');
             time = (new Date()).getFullYear() + '-' + time;
-            incSecond = Date.parse(new Date()) / 1000 - (new Date(time)).getTime() / 1000;//日期
+            incSecond = Math.floor(Date.now() / 1000) - (new Date(time)).getTime() / 1000;//日期
         } else {
             time = time.replace('日', '').replace('月', '-').replace('年', '-');
-            incSecond = Date.parse(new Date()) / 1000 - (new Date(time)).getTime() / 1000;//直接是日期
+            incSecond = Math.floor(Date.now() / 1000) - (new Date(time)).getTime() / 1000;//直接是日期
         }
         return incSecond;
     },
 
     /**
      * 获取视频的详细信息
-     * @param {number} isCity 
-     * @param {object} params 
-     * @returns {object}
+     * @param {boolean} isCity 
+     * @param {any} params 
+     * @returns {any}
      */
     getInfo(isCity, params) {
         if (!params) {
@@ -430,20 +440,25 @@ const Video = {
         }
 
         if (!params['nickname']) {
+            /** @ts-ignore */
             info.nickname = this.getNickname();
         } else {
+            /** @ts-ignore */
             info.nickname = params['nickname'];
         }
 
         if (!params['title']) {
+            /** @ts-ignore */
             info.title = this.getContent();
         } else {
+            /** @ts-ignore */
             info.title = params['title'];
         }
 
         Log.log('同城数据');
         if (isCity) {
             Log.log('同城数据1');
+            /** @ts-ignore */
             info.distance = this.getDistance();
         }
 
@@ -483,12 +498,12 @@ const Video = {
             Common.sleep(2000);
         }
 
-        let containers = UiSelector().descMatches('(视频|图文)').className('android.view.View').filter(v => {
+        let containers = UiSelector().descMatches(/(视频|图文)/).className('android.view.View').filter(v => {
             return v.desc().indexOf('置顶') === -1;
         }).clickable(true).isVisibleToUser(true).find();
         let videoIndex = 0;
         let baseZanCount = 1000000000;
-        let res;
+        let res = false;
 
         //老视频好像没有这种容器，新视频适用这个模式
         if (containers.length > 0) {
@@ -496,7 +511,7 @@ const Video = {
                 let zanCount = parseInt(containers[i].desc().split('点赞数')[1]);
                 if (zanCount < baseZanCount) {
                     baseZanCount = zanCount;
-                    videoIndex = i;
+                    videoIndex = parseInt(i);
                 }
             }
 
@@ -526,7 +541,7 @@ const Video = {
      * @returns {boolean}
      */
     videoSlow() {
-        //Common.sleep(1000 + Math.random() * 1000);
+        Common.sleep(1000 + Math.random() * 500);
         return true;
     },
 }
